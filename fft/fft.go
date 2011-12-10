@@ -167,10 +167,9 @@ func BluesteinFFT(x []complex128) []complex128 {
 	if _, present := n2_factors[lx]; !present {
 		n2_factors[lx] = make([]complex128, lx)
 		n2_inv_factors[lx] = make([]complex128, lx)
-		n2_conj_factors[lx] = make([]complex128, lx)
 
 		for i := 0; i < lx; i++ {
-			sin, cos := math.Sincos(math.Pi / float64(lx) * float64(i*i))
+			sin, cos := math.Sincos(math.Pi / float64(lx) * float64(math.Pow(i,2)))
 			n2_factors[lx][i] = complex(cos, sin)
 			n2_inv_factors[lx][i] = complex(cos, -sin)
 		}
@@ -182,10 +181,8 @@ func BluesteinFFT(x []complex128) []complex128 {
 
 	b := make([]complex128, la)
 	for i := 0; i < lx; i++ {
-		if i == 0 {
-			b[i] = n2_factors[lx][i]
-		} else if i < lx {
-			b[i] = n2_factors[lx][i]
+		b[i] = n2_factors[lx][i]
+		if i != 0 {
 			b[la-i] = n2_factors[lx][i]
 		}
 	}
