@@ -136,12 +136,47 @@ var fftTests = []fftTest{
 	},
 }
 
+type fft2Test struct {
+	in  [][]float64
+	out [][]complex128
+}
+
+var fft2Tests = []fft2Test{
+	fft2Test{
+		[][]float64{{1, 2, 3}, {3, 4, 5}},
+		[][]complex128{
+			{complex(18, 0), complex(-3, 1.73205081), complex(-3, -1.73205081)},
+			{complex(-6, 0), complex(0, 0), complex(0, 0)}},
+	},
+	fft2Test{
+		[][]float64{{0.1, 0.2, 0.3, 0.4, 0.5}, {1, 2, 3, 4, 5}, {3, 2, 1, 0, -1}},
+		[][]complex128{
+			{complex(21.5, 0), complex(-0.25, 0.34409548), complex(-0.25, 0.08122992), complex(-0.25, -0.08122992), complex(-0.25, -0.34409548)},
+			{complex(-8.5, -8.66025404), complex(5.70990854, 4.6742225), complex(1.15694356, 4.41135694), complex(-1.65694356, 4.24889709), complex(-6.20990854, 3.98603154)},
+			{complex(-8.5, 8.66025404), complex(-6.20990854, -3.98603154), complex(-1.65694356, -4.24889709), complex(1.15694356, -4.41135694), complex(5.70990854, -4.6742225)}},
+	},
+}
+
 func prettyClose(a, b []complex128) bool {
 	if len(a) != len(b) {
 		return false
 	}
+
 	for i, c := range a {
 		if !ComplexEqual(c, b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func prettyClose2(a, b [][]complex128) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i, c := range a {
+		if !prettyClose(c, b[i]) {
 			return false
 		}
 	}
@@ -155,20 +190,34 @@ func ComplexEqual(a, b complex128) bool {
 	i_a := imag(a)
 	i_b := imag(b)
 
-	return ((math.Abs(r_a-r_b) <= closeFactor || math.Abs(1-r_a/r_b) <= closeFactor) &&
-		(math.Abs(i_a-i_b) <= closeFactor || math.Abs(1-i_a/i_b) <= closeFactor))
+	return ((math.Fabs(r_a-r_b) <= closeFactor || math.Fabs(1-r_a/r_b) <= closeFactor) &&
+		(math.Fabs(i_a-i_b) <= closeFactor || math.Fabs(1-i_a/i_b) <= closeFactor))
 }
 
 func TestFFT(t *testing.T) {
 	for _, ft := range fftTests {
-		v := FFT_real(ft.in)
+		v := FFTReal(ft.in)
 		if !prettyClose(v, ft.out) {
 			t.Error("FFT error\ninput:", ft.in, "\noutput:", v, "\nexpected:", ft.out)
 		}
 
 		vi := IFFT(ft.out)
-		if !prettyClose(vi, ToComplex(ft.in)) {
-			t.Error("IFFT error\ninput:", ft.out, "\noutput:", vi, "\nexpected:", ToComplex(ft.in))
+		if !prettyClose(vi, toComplex(ft.in)) {
+			t.Error("IFFT error\ninput:", ft.out, "\noutput:", vi, "\nexpected:", toComplex(ft.in))
+		}
+	}
+}
+
+func TestFFT2(t *testing.T) {
+	for _, ft := range fft2Tests {
+		v, _ := FFT2Real(ft.in)
+		if !prettyClose2(v, ft.out) {
+			t.Error("FFT2 error\ninput:", ft.in, "\noutput:", v, "\nexpected:", ft.out)
+		}
+
+		vi, _ := IFFT2(ft.out)
+		if !prettyClose2(vi, toComplex2(ft.in)) {
+			t.Error("IFFT2 error\ninput:", ft.out, "\noutput:", vi, "\nexpected:", toComplex2(ft.in))
 		}
 	}
 }
